@@ -94,7 +94,9 @@ def cut_image(img):
     """
     img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    average_brightness = img_grey[img_grey.shape[0]//7: 6*img_grey.shape[0]//7, img_grey.shape[1]//7:6*img_grey.shape[1]//7].mean()
+    # average_brightness = img_grey[img_grey.shape[0]//7: 6*img_grey.shape[0]//7, img_grey.shape[1]//7:6*img_grey.shape[1]//7].mean()
+    average_brightness = img_grey.mean()
+
     img2 = np.array(img_grey > average_brightness, dtype=np.float32)
     kernel = np.ones((10, 10), np.uint8)
     img3 = cv2.erode(img2, kernel, iterations=1)

@@ -35,6 +35,12 @@ def send_welcome(message):
     logging.debug('start command incoming')
     bot.reply_to(message, "I accept slides wia photo and return it with more compatible way")
 
+@bot.message_handler(content_types=["text"])
+def send_welcome(message):
+    logging.debug('some text accepted')
+    bot.reply_to(message, "I accept slides wia photo and return it with more compatible way")
+
+
 @bot.message_handler(content_types=["photo"])
 def send_ticket(message):
     logging.debug("got photo")

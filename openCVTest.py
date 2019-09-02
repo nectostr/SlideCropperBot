@@ -61,8 +61,10 @@ def cut_image(img):
     img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     if img_grey.mean() > 255/2:
+        logging.debug("Light pic")
         img3 = ones_for_screen_matrix_light(img_grey)
     else:
+        logging.debug("Dark pic")
         img3 = ones_for_screen_matrix_dark(img_grey)
 
     logging.info(f"Photo black-white creating. {time.time() - t1}")

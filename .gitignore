@@ -1,0 +1,6 @@
+config.py
+.idea
+*.jpg
+data
+__pycache__
+logged_image

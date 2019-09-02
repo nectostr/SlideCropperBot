@@ -1,0 +1,8 @@
+numpy
+telebot
+PIL
+numba
+opencv # used as cv2
+
+# nessesary only for debug photo saving
+matplotlib

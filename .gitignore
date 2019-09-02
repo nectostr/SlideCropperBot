@@ -3,3 +3,4 @@ config.py
 *.jpg
 data
 __pycache__
+logged_image

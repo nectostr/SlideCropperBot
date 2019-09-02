@@ -10,6 +10,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 from PIL import Image
 import io
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+mplLogger = logging.getLogger("matplotlib")
+mplLogger.setLevel(logging.WARNING)
 
 if config.use_proxy:
     telebot.apihelper.proxy = {'https': 'socks5h://{}:{}@{}:{}'.format(config.proxy_user,
@@ -28,19 +33,19 @@ sending_now = False
 
 @bot.message_handler(commands=["start"])
 def send_welcome(message):
-    print('start command incoming')
+    logging.debug('start command incoming')
     bot.reply_to(message, "I accept slides wia photo and return it with more compatible way")
 
 @bot.message_handler(content_types=["photo"])
 def send_ticket(message):
-    print("got photo")
+    logging.debug("got photo")
     fileID = message.photo[-1].file_id
-    print(message.photo[-1])
+    logging.debug(message.photo[-1])
     file_info = bot.get_file(fileID)
     bytes = bot.download_file(file_info.file_path)
     slide = np.array(Image.open(io.BytesIO(bytes)))
     result = IW.cut_image(slide)
-    print("got res")
+    logging.debug("got res")
     res_byte = io.BytesIO()
     Image.fromarray(result).save(res_byte, format="JPEG")
     bot.send_photo(message.chat.id, res_byte.getvalue())

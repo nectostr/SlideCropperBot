@@ -5,7 +5,8 @@ from numba import jit
 import time
 import logging
 
-@jit()
+
+@jit(nopython=True)
 def get_corner_matrix(img3):
     corn1 = np.full(img3.shape, np.inf)
     corn2 = np.full(img3.shape, np.inf)
@@ -22,6 +23,30 @@ def get_corner_matrix(img3):
 
     return corn1, corn2, corn3, corn4
 
+def ones_for_screen_matrix_light(img_grey):
+
+    # average_brightness = img_grey[img_grey.shape[0]//7: 6*img_grey.shape[0]//7, img_grey.shape[1]//7:6*img_grey.shape[1]//7].mean()
+    average_brightness = img_grey.mean()
+
+    img2 = np.array(img_grey > average_brightness, dtype=np.float32)
+    kernel = np.ones((10, 10), np.uint8)
+    img3 = cv2.erode(img2, kernel, iterations=1)
+    img3 = cv2.dilate(img3, kernel, iterations=1)
+    return img3
+
+def ones_for_screen_matrix_dark(img_grey):
+
+    average_brightness = (img_grey[:, :img_grey.shape[1]//6].sum() + img_grey[:, 5*img_grey.shape[1]//6:].sum() +
+                          img_grey[:img_grey.shape[0]//6, img_grey.shape[1]//6:5*img_grey.shape[1]//6].sum() +
+                          img_grey[5*img_grey.shape[0]//6:, img_grey.shape[1]//6:5*img_grey.shape[1]//6].sum()) / \
+                         (img_grey.shape[1]//6*img_grey.shape[0] * 2 + img_grey.shape[0]//6 * 2/3*img_grey.shape[1] * 2) * 1.2
+
+    img2 = np.array(img_grey > average_brightness, dtype=np.float32)
+    kernel = np.ones((10, 10), np.uint8)
+    img3 = cv2.erode(img2, kernel, iterations=1)
+    img3 = cv2.dilate(img3, kernel, iterations=1)
+    return img3
+
 def cut_image(img):
     """
     1) middle point
@@ -31,19 +56,16 @@ def cut_image(img):
     :return:
     """
     t1 = time.time()
-    logging.debug("Start photo cutting")
+    logging.info("Start photo cutting")
 
     img_grey = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # average_brightness = img_grey[img_grey.shape[0]//7: 6*img_grey.shape[0]//7, img_grey.shape[1]//7:6*img_grey.shape[1]//7].mean()
-    average_brightness = img_grey.mean()
+    if img_grey.mean() > 255/2:
+        img3 = ones_for_screen_matrix_light(img_grey)
+    else:
+        img3 = ones_for_screen_matrix_dark(img_grey)
 
-    img2 = np.array(img_grey > average_brightness, dtype=np.float32)
-    kernel = np.ones((10, 10), np.uint8)
-    img3 = cv2.erode(img2, kernel, iterations=1)
-    img3 = cv2.dilate(img3, kernel, iterations=1)
-
-    logging.debug(f"Photo black-white creating. {time.time() - t1}")
+    logging.info(f"Photo black-white creating. {time.time() - t1}")
     t1 = time.time()
 
 
@@ -62,7 +84,7 @@ def cut_image(img):
     c3 = np.unravel_index(corn3.argmin(), corn3.shape)
     c4 = np.unravel_index(corn4.argmin(), corn4.shape)
 
-    logging.debug(f"Corner matrix prep func finished {time.time() - t1}")
+    logging.info(f"Corner matrix prep func finished {time.time() - t1}")
     t1 = time.time()
     # print(c1, c2, c3, c4)
     # print((img3.shape[1], img3.shape[0]))
@@ -87,16 +109,17 @@ def cut_image(img):
         [0, maxHeight - 1]], dtype="float32")
 
     logging.debug(f"Source corner points is: \n{srcPoints}")
-    plt.imshow(img3)
-    plt.scatter(srcPoints[:, 0], srcPoints[:, 1])
-    plt.savefig("image.jpg")
+    if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
+        plt.imshow(img3)
+        plt.scatter(srcPoints[:, 0], srcPoints[:, 1])
+        plt.savefig(f"./logged_image/img_{time.time()}.jpg")
 
-    logging.debug(f"Additional point aloc finished: {time.time() - t1}")
+    logging.info(f"Additional point aloc finished: {time.time() - t1}")
     t1 = time.time()
 
     warp_mat = cv2.getPerspectiveTransform(srcPoints, dstPoints)
 
-    logging.debug(f"Warp matrix creation finished finished: {time.time() - t1}")
+    logging.info(f"Warp matrix creation finished finished: {time.time() - t1}")
     t1 = time.time()
     img4 = cv2.warpPerspective(img, warp_mat, (maxWidth, maxHeight))
     logging.debug(f"Warp finished: {time.time() - t1}")

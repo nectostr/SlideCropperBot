@@ -7,12 +7,11 @@ import time
 import openCVTest as IW
 import os
 import numpy as np
-from matplotlib import pyplot as plt
 from PIL import Image
 import io
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 mplLogger = logging.getLogger("matplotlib")
 mplLogger.setLevel(logging.WARNING)
 
